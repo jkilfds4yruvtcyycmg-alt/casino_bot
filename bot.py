@@ -120,14 +120,14 @@ async def cmd_top(message: types.Message):
     if not user_balances:
         await message.reply("Топ пуст, все бомжи!")
         return
-
-      sorted_top = sorted(user_balances.items(), key=lambda x: x[1], reverse=True)[:5]
-        text = "🏆 *ТОП-5 МАЖОРОВ ЧАТА:*\n\n"
+  
+    sorted_top = sorted(user_balances.items(), key=lambda x: x[1], reverse=True)[:5]
+    text = "🏆 *ТОП-5 МАЖОРОВ ЧАТА:*\n\n"
     
-          for i, (u_id, bal) in enumerate(sorted_top, 1):
-            text += f"{i}. User ID `{u_id}` - *{bal:,}$*\n"
+        for i, (u_id, bal) in enumerate(sorted_top, 1):
+        text += f"{i}. User ID `{u_id}` - *{bal:,}$*\n"
     
-        await message.reply(text, parse_mode="Markdown")
+    await message.reply(text, parse_mode="Markdown")
 
 
 # --- ИГРЫ НА БАБКИ ---
