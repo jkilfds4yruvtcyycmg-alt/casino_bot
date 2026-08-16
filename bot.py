@@ -98,8 +98,7 @@ async def cmd_bonus(message: types.Message):
     user_bonus_cd[user_id] = now
     await message.reply(f"🎁 Ты открыл ежедневный сундук и забрал +{bonus}$!\nБаланс: **{user_balances[user_id]}$**")
 
-# --- 2.
-МАГИЧЕСКИЙ ШАР 🔮 ---
+# --- 2.МАГИЧЕСКИЙ ШАР 🔮 ---
 
 @dp.message(Command("ball"))
 async def cmd_ball(message: types.Message):
