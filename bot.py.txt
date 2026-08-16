@@ -1,0 +1,239 @@
+python
+import asyncio
+import logging
+import random
+import time
+from collections import defaultdict
+
+from aiogram import Bot, Dispatcher, F, types
+from aiogram.filters import Command
+from aiogram.enums import DiceEmoji
+from aiogram.types import BotCommand, BotCommandScopeAllGroupChats
+
+# ⚠️ ВСТАВЬ СЮДА ТОКЕН ОТ НОВОГО БОТА (ИЗ BOTFATHER)
+BOT_TOKEN = "8598421333:AAGRtZmLcpL-mOqYDSuaInv7Gv-ofOELEN0"
+
+logging.basicConfig(level=logging.INFO)
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+# --- БАЗА ДАННЫХ В ОПЕРАТИВКЕ ---
+user_balances = defaultdict(lambda: 1000)
+user_cooldowns = {}
+
+def get_valid_bet(user_id: int, arg: str) -> int:
+    try:
+        bet = int(arg)
+        if bet <= 0:
+            return 0
+        if bet > user_balances[user_id]:
+            return -1
+        return bet
+    except ValueError:
+        return 0
+
+# --- КОМАНДЫ И ИНФО ---
+
+@dp.message(Command("help", "start"))
+async def cmd_start(message: types.Message):
+    await message.answer(
+        "🎰 **ДОБРО ПОЖАЛОВАТЬ В ПОДПОЛЬНОЕ КАЗИНО!** 🎲\n\n"
+        "📜 **Список доступных команд:**\n"
+        "💰 `/bal` — Твой баланс\n"
+        "⛏ `/work` — Поработать (раз в 10 мин)\n"
+        "🏆 `/top` — Список самых богатых мажоров\n\n"
+        "🎮 **Мини-игры на бабки:**\n"
+        "🎰 `/slots <ставка>` — Однорукий бандит\n"
+        "🎲 `/dice <ставка>` — Бросок костей (кто больше)\n"
+        "🪙 `/coin <ставка> <орел/решка>` — Угадай орёл или решка\n"
+        "🎯 `/darts <ставка>` — Бросок в мишень (Яблочко = x3!)\n\n"
+        "💡 *Пример: `/slots 100` или `/coin 50 орел`*",
+        parse_mode="Markdown"
+    )
+
+@dp.message(Command("bal", "balance"))
+async def cmd_balance(message: types.Message):
+    user_id = message.from_user.id
+    bal = user_balances[user_id]
+    await message.reply(f"💳 Твой баланс: **{bal:,}$**", parse_mode="Markdown")
+
+@dp.message(Command("work"))
+async def cmd_work(message: types.Message):
+    user_id = message.from_user.id
+    now = time.time()
+    last_work = user_cooldowns.get(user_id, 0)
+
+    if now - last_work < 600:
+        left = int(600 - (now - last_work))
+        mins, secs = divmod(left, 60)
+        await message.reply(f"⏳ Ты заебался на работе! Отдохни ещё **{mins} мин {secs} сек**.")
+        return
+
+    earned = random.randint(200, 800)
+    user_balances[user_id] += earned
+    user_cooldowns[user_id] = now
+    await message.reply(f"🛠 Ты отпахал смену на заводе и заработал **+{earned}$**!\nБаланс: **{user_balances[user_id]}$**")
+
+@dp.message(Command("top"))
+async def cmd_top(message: types.Message):
+    if not user_balances:
+        await message.reply("Топ пуст, все бомжи!")
+        return
+    
+    sorted_top = sorted(user_balances.items(), key=lambda x: x[1], reverse=True)[:5]
+    text = "🏆 **ТОП-5 МАЖОРОВ ЧАТА:**\n\n"
+    
+    for i, (u_id, bal) in enumerate(sorted_top, 1):
+        text += f"{i}. User ID `{u_id}` — **{bal:,}$**\n"
+        
+    await message.reply(text, parse_mode="Markdown")
+
+# --- МИНИ-ИГРЫ ---
+
+@dp.message(Command("slots"))
+async def cmd_slots(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split()
+    
+    if len(args) < 2:
+        await message.reply("⚠️ Напиши ставку! Пример: `/slots 100`", parse_mode="Markdown")
+        return
+        
+    bet = get_valid_bet(user_id, args[1])
+    if bet == 0:
+        await message.reply("❌ Неверная ставка!")
+        return
+    if bet == -1:
+        await message.reply(f"❌ У тебя нет столько бабок! Твой баланс: {user_balances[user_id]}$")
+        return
+
+    user_balances[user_id] -= bet
+    msg = await message.answer_dice(emoji=DiceEmoji.SLOT_MACHINE)
+    await asyncio.sleep(2)
+
+    val = msg.dice.value
+    if val == 64:
+        win = bet * 10
+        user_balances[user_id] += win
+        await message.reply(f"💥 **ДЖЕКПОТ! 7-7-7!** 💥\nТы выиграл **+{win}$**!", parse_mode="Markdown")
+    elif val in [1, 22, 43]:
+        win = bet * 3
+        user_balances[user_id] += win
+        await message.reply(f"🎉 **ТРИ В РЯД!** Выигрыш: **+{win}$**!", parse_mode="Markdown")
+    else:
+        await message.reply(f"📉 Не повезло, бро! Минус **-{bet}$**.")
+
+@dp.message(Command("dice"))
+async def cmd_dice(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split()
+    
+    if len(args) < 2:
+        await message.reply("⚠️ Напиши ставку! Пример: `/dice 100`", parse_mode="Markdown")
+        return
+        
+    bet = get_valid_bet(user_id, args[1])
+    if bet <= 0:
+        await message.reply("❌ Ошибка в ставке!")
+        return
+
+    user_balances[user_id] -= bet
+    
+    await message.answer("🎲 Бросаешь ты...")
+    user_dice = await message.answer_dice(emoji=DiceEmoji.DICE)
+    await asyncio.sleep(2)
+    
+    await message.answer("🎲 Бросает казино...")
+    bot_dice = await message.answer_dice(emoji=DiceEmoji.DICE)
+    await asyncio.sleep(2)
+
+    u_val = user_dice.dice.value
+    b_val = bot_dice.dice.value
+
+    if u_val > b_val:
+        win = bet * 2
+        user_balances[user_id] += win
+        await message.reply(f"🎉 Ты выбросил **{u_val}**, казино **{b_val}**.\nТы ПОБЕДИЛ и забрал **+{win}$**!")
+    elif u_val < b_val:
+        await message.reply(f"🗿 Ты выбросил **{u_val}**, казино **{b_val}**.\nТы проиграл **-{bet}$**!")
+    else:
+        user_balances[user_id] += bet
+        await message.reply(f"🤝 Ничья! Оба выбросили **{u_val}**. Ставка возвращена.")
+
+@dp.message(Command("coin"))
+async def cmd_coin(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split()
+    
+    if len(args) < 3 or args[2].lower() not in ["орел", "решка"]:
+        await message.reply("⚠️ Введи ставку и выбор! Пример: `/coin 100 орел`", parse_mode="Markdown")
+        return
+        
+    bet = get_valid_bet(user_id, args[1])
+    if bet <= 0:
+        await message.reply("❌ Недостаточно средств или неверная ставка!")
+        return
+
+    user_choice = args[2].lower()
+    user_balances[user_id] -= bet
+    
+    result = random.choice(["орел", "решка"])
+    
+    if user_choice == result:
+        win = bet * 2
+        user_balances[user_id] += win
+        await message.reply(f"🪙 Выпал(а) **{result.upper()}**!\nТы угадал и получил **+{win}$**!", parse_mode="Markdown")
+    else:
+        await message.reply(f"🪙 Выпал(а) **{result.upper()}**!\nТы не угадал. Минус **-{bet}$**.", parse_mode="Markdown")
+
+@dp.message(Command("darts"))
+async def cmd_darts(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split()
+    
+    if len(args) < 2:
+        await message.reply("⚠️ Напиши ставку! Пример: `/darts 100`", parse_mode="Markdown")
+        return
+        
+    bet = get_valid_bet(user_id, args[1])
+    if bet <= 0:
+        await message.reply("❌ Ошибка в ставке!")
+        return
+
+    user_balances[user_id] -= bet
+    msg = await message.answer_dice(emoji=DiceEmoji.DARTS)
+    await asyncio.sleep(2)
+
+    val = msg.dice.value
+    if val == 6:
+        win = bet * 3
+        user_balances[user_id] += win
+        await message.reply(f"🎯 **ПРЯМО В ЯБЛОЧКО!** Множитель x3!\nВыигрыш: **+{win}$**!", parse_mode="Markdown")
+    elif val == 5:
+        win = int(bet * 1.5)
+        user_balances[user_id] += win
+        await message.reply(f"🎯 Хороший бросок! Множитель x1.5!\nВыигрыш: **+{win}$**!", parse_mode="Markdown")
+    else:
+        await message.reply(f"🎯 Мазила! Минус **-{bet}$**.")
+
+# --- УСТАНОВКА ВСПЛЫВАЮЩЕГО МЕНЮ КОМАНД ---
+async def set_main_menu(bot: Bot):
+    main_commands = [
+        BotCommand(command="help", description="📜 Список всех команд"),
+        BotCommand(command="bal", description="💰 Посмотреть свой баланс"),
+        BotCommand(command="work", description="⛏ Поработать на заводе"),
+        BotCommand(command="top", description="🏆 Топ богачей чата"),
+        BotCommand(command="slots", description="🎰 Однорукий бандит (крутить слоты)"),
+        BotCommand(command="dice", description="🎲 Игра в кости с казино"),
+        BotCommand(command="coin", description="🪙 Сыграть в монетку (орёл/решка)"),
+        BotCommand(command="darts", description="🎯 Бросок в мишень"),
+    ]
+    await bot.set_my_commands(main_commands, scope=BotCommandScopeAllGroupChats())
+
+async def main():
+    print("Казино занижено, меню команд зашито!")
+    await set_main_menu(bot)
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main()) 
