@@ -215,8 +215,7 @@ async def cmd_coin(message: types.Message):
         await message.reply(f"🪙 Выпал **{result.upper()}**! Ты не угадал и слил **-{bet}$**.\nБаланс: **{user_balances[user_id]}$**", parse_mode="Markdown")
 
 # 🎯 ДАРТС
-@dp.message(Command("
-darts"))
+@dp.message(Command("darts"))
 async def cmd_darts(message: types.Message):
     user_id = message.from_user.id
     args = message.text.split()
