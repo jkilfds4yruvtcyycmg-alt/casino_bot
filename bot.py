@@ -227,12 +227,14 @@ async def cmd_slots(message: types.Message):
     if len(args) < 2:
         await message.reply("⚠️ Напиши ставку! Пример: /slots 100")
         return
+
     bet = get_valid_bet(user_id, args[1])
     if bet <= 0:
         await message.reply("❌ Ошибка в ставке!")
         return
 
     user_balances[user_id] -= bet
+
     msg = await message.answer_dice(emoji=DiceEmoji.SLOT_MACHINE)
     await asyncio.sleep(2)
 
