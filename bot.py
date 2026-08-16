@@ -328,8 +328,8 @@ async def cmd_darts(message: types.Message):
     elif score in [4, 5]:
         win = int(bet * 1.5)
         user_balances[user_id] += win
-        await anim_msg.edit_text(f"🎯 **ОТЛИЧНЫЙ БРОСОК! (Попал в красную зону)**\n\n✨ Множитель: **x1.5**\n💰 Выигрыш: **+{win}$**!\n💳 Баланс: **{use
-r_balances[user_id]}$**", parse_mode="Markdown")
+        await anim_msg.edit_text(f"🎯 *ОТЛИЧНЫЙ БРОСОК!* (Попал в красную зону)\n\n💸 Множитель: *x1.5*\n💰 Выигрыш: *+{win}$*!\n💳 Баланс: *{user_balances[user_id]}$*")
+
     else:
         await anim_msg.edit_text(f"🎯 💨 **МИМО ЯБЛОЧКА! (Дротик воткнулся в стену)**\n\n📉 Потеряно: **-{bet}$**\n💳 Баланс: **{user_balances[user_id]}$**", parse_mode="Markdown")
 
