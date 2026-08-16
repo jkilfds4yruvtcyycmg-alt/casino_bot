@@ -191,7 +191,6 @@ async def cmd_darts(message: types.Message):
     user_id = message.from_user.id
     args = message.text.split()
     
-    # Если не указал ставку
     if len(args) < 2:
         await message.reply("🎯 Напиши ставку цифрой! Пример: `/darts 100`", parse_mode="Markdown")
         return
@@ -206,24 +205,41 @@ async def cmd_darts(message: types.Message):
 
     user_balances[user_id] -= bet
     
-    try:
-        msg = await message.answer_dice(emoji=DiceEmoji.DARTS)
-        await asyncio.sleep(2.5) # Ждем пока дротик долетит
+    # Симуляция броска
+    anim_msg = await message.answer("🎯 *Замахиваешься и бросаешь дротик...* 🎯", parse_mode="Markdown")
+    await asyncio.sleep(1.5)
+    
+    # Генерация результата (рандом от 1 до 6)
+    score = random.randint(1, 6)
+    
+    if score == 6:
+        win = bet * 3
+        user_balances[user_id] += win
+        await anim_msg.edit_text(
+            f"🎯 🎯 🎯 *ПРЯМО В ЯБЛОЧКО! (100/100)* 🎯 🎯 🎯\n\n"
+            f"🔥 Множитель: *x3*\n"
+            f"💰 Твой выигрыш: *+{win}$*!\n"
+            f"💳 Баланс: *{user_balances[user_id]}$*", 
+            parse_mode="Markdown"
+        )
+    elif score in [4, 5]:
+        win = int(bet * 1.5)
+        user_balances[user_id] += win
+        await anim_msg.edit_text(
+            f"🎯 *ОТЛИЧНЫЙ БРОСОК! (Попал в красную зону)*\n\n"
+            f"✨ Множитель: *x1.5*\n"
+            f"💰 Твой выигрыш: *+{win}$*!\n"
+            f"💳 Баланс: *{user_balances[user_id]}$*", 
+            parse_mode="Markdown"
+        )
+    else:
+        await anim_msg.edit_text(
+            f"🎯 💨 *МИМО ЯБЛОЧКА! (Дротик воткнулся в стену)*\n\n"
+            f"📉 Потеряно: *-{bet}$*\n"
+            f"💳 Баланс: *{user_balances[user_id]}$*", 
+            parse_mode="Markdown"
+        )
 
-        val = msg.dice.value # 6 - Яблочко, 5 - Красное, <5 - Мимо
-        if val == 6:
-            win = bet * 3
-            user_balances[user_id] += win
-            await message.reply(f"🎯 *ПРЯМО В ЯБЛОЧКО!* (x3)\nТвой выигрыш: *+{win}$*!", parse_mode="Markdown")
-        elif val == 5:
-            win = int(bet * 1.5)
-            user_balances[user_id] += win
-            await message.reply(f"🎯 Отличный бросок! (x1.5)\nТвой выигрыш: *+{win}$*!", parse_mode="Markdown")
-        else:
-            await message.reply(f"🎯 Мимо яблочка! Потеряно: *-{bet}$*.")
-    except Exception as e:
-        user_balances[user_id] += bet # Возвращаем бабки при ошибке
-        await message.reply("⚠️ Ошибка броска! Проверь, есть ли у бота права отправлять стикеры/медиа в чат.")
 
 # --- УСТАНОВКА ВСПЛЫВАЮЩЕГО МЕНЮ КОМАНД ---
 async def set_main_menu(bot: Bot):
