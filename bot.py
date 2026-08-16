@@ -225,8 +225,7 @@ async def cmd_slots(message: types.Message):
     user_id = message.from_user.id
     args = message.text.split()
     if len(args) < 2:
-        await message.reply("⚠️ Напиши ставку! Пример: `/slots 100`
-", parse_mode="Markdown")
+        await message.reply("⚠️ Напиши ставку! Пример: /slots 100")
         return
     bet = get_valid_bet(user_id, args[1])
     if bet <= 0:
