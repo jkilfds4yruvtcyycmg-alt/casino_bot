@@ -186,6 +186,7 @@ async def cmd_coin(message: types.Message):
     else:
         await message.reply(f"🪙 Выпал(а) **{result.upper()}**!\nТы не угадал. Минус **-{bet}$**.", parse_mode="Markdown")
 
+
 @dp.message(Command("darts"))
 async def cmd_darts(message: types.Message):
     user_id = message.from_user.id
@@ -205,11 +206,9 @@ async def cmd_darts(message: types.Message):
 
     user_balances[user_id] -= bet
     
-    # Симуляция броска
     anim_msg = await message.answer("🎯 *Замахиваешься и бросаешь дротик...* 🎯", parse_mode="Markdown")
     await asyncio.sleep(1.5)
     
-    # Генерация результата (рандом от 1 до 6)
     score = random.randint(1, 6)
     
     if score == 6:
