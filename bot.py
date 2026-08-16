@@ -10,7 +10,7 @@ from aiogram.enums import DiceEmoji
 from aiogram.types import BotCommand, BotCommandScopeAllGroupChats
 
 # ⚠️ ВСТАВЬ СЮДА ТОКЕН ОТ БОТА КАЗИНО
-BOT_TOKEN = "8888914933:AAGKNMqxOY6Q3KKyZuWqQFIKVlXsZqY5Ih0"
+BOT_TOKEN = "8888914933:AAH8AqXOZtvHjgZ-Q2oCb6XJ9g0Q36EiUf0"
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
