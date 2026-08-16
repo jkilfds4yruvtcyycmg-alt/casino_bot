@@ -99,19 +99,21 @@ async def cmd_bonus(message: types.Message):
     await message.reply(f"🎁 Ты открыл ежедневный сундук и забрал **+{bonus}$**!\nБаланс: **{user_balances[user_id]}$**")
 
 # --- 2. МАГИЧЕСКИЙ ШАР 🔮 ---
+
 @dp.message(Command("ball"))
 async def cmd_ball(message: types.Message):
     args = message.text.split(maxsplit=1)
-if len(args) < 2:
-        await message.reply("🔮 Задай вопрос шару! Пример: `/ball Бот нормальный?`", parse_mode="Markdown")
+    if len(args) < 2:
+        await message.reply("🔮 Задай вопрос шару! Пример: ...")
         return
-answers = [
-        "✅ Бесспорно, да!", "✅ 100% да, бро!", "✅ Знаки говорят — ДА.",
-        "❓ Пока не понятно, спроси позже...", "❓ Лучше тебе этого не знать...",
-        "❌ Даже не думай!", "❌ Мой ответ — НЕТ.", "❌ Шансы равны нулю!"
-    ]
-    await message.reply(f"🔮 **Шар говорит:** {random.choice(answers)}")
 
+    answers = [
+        "✅ Бесспорно, да!", "✅ 100% да, бро!", ...
+        "❓ Пока не понятно, спроси позже...", ...
+        "❌ Даже не думай!", "❌ Мой ответ - НЕТ.", ...
+    ]
+    await message.reply(f"🔮 *Шар говорит:* {random.choice(answers)}") 
+    
 @dp.message(Command("top"))
 async def cmd_top(message: types.Message):
     if not user_balances:
