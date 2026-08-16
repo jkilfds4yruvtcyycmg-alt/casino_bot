@@ -112,12 +112,12 @@ async def cmd_ball(message: types.Message):
         "❓ Пока не понятно, спроси позже...",
         "❌ Даже не думай!",
         "❌ Мой ответ - НЕТ."
-    ]
-    await message.reply(f"🔮 *Шар говорит:* {random.choice(answers)}") 
+        ]
+        await message.reply(f"🔮 *Шар говорит:* {random.choice(answers)}") 
     
 @dp.message(Command("top"))
 async def cmd_top(message: types.Message):
-    if not user_balances:
+        if not user_balances:
         await message.reply("Топ пуст, все бомжи!")
         return
     
