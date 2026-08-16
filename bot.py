@@ -104,8 +104,15 @@ async def cmd_bonus(message: types.Message):
 async def cmd_ball(message: types.Message):
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
-        await message.reply("🔮 Задай вопрос шару! Пример: ...")
+        await message.reply("🔮 Задай вопрос шару!")
         return
+
+    answers = [
+        "✅ Бесспорно, да!", 
+        "❓ Пока не понятно, спроси позже...", 
+        "❌ Даже не думай!"
+    ]
+    await message.reply(f"🔮 *Шар говорит:* {random.choice(answers)}")
 
     answers = [
         "✅ Бесспорно, да!", "✅ 100% да, бро!", ...
